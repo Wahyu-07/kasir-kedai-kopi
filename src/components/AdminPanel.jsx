@@ -224,10 +224,10 @@ export default function AdminPanel({
   // --- DATABASE EXPORT / IMPORT ---
   const handleExportData = () => {
     const backupJson = localDb.exportBackup();
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(backupJson);
+    const dataStr = "data:text/plain;charset=utf-8," + encodeURIComponent(backupJson);
     const downloadAnchor = document.createElement('a');
     downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", `Kopi_Sanak_Backup_${new Date().toISOString().slice(0, 10)}.json`);
+    downloadAnchor.setAttribute("download", `Kopi_Sanak_Backup_${new Date().toISOString().slice(0, 10)}.txt`);
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();
@@ -681,7 +681,7 @@ export default function AdminPanel({
               <Upload size={16} /> Unggah & Pulihkan Data
               <input 
                 type="file" 
-                accept=".json" 
+                accept=".txt,.json" 
                 onChange={handleImportData} 
                 style={{ display: 'none' }}
               />
