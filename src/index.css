@@ -1460,3 +1460,214 @@ body {
   }
 }
 
+/* ==========================================
+   STYLING MOBILE RESPONSIVE & FLOATING CART
+   ========================================== */
+
+.mobile-close-btn {
+  display: none !important;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@media (max-width: 768px) {
+  /* Tampilkan tombol tutup silang di keranjang belanja */
+  .mobile-close-btn {
+    display: flex !important;
+  }
+
+  /* Struktur layout utama di HP */
+  .main-content {
+    position: relative;
+    flex-direction: column;
+    overflow: hidden;
+    height: calc(100vh - 120px); /* Menyesuaikan dengan tinggi header yang menumpuk */
+  }
+
+  .left-panel {
+    width: 100% !important;
+    flex: 1 !important;
+    height: 100% !important;
+    border-right: none;
+    padding-bottom: 80px; /* Jarak agar katalog tidak tertutup bar melayang */
+  }
+
+  /* Panel keranjang belanja diubah menjadi drawer meluncur dari bawah */
+  .right-panel {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 85vh;
+    background-color: var(--bg-secondary);
+    border-top: 2px solid var(--border-color);
+    border-left: none;
+    border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
+    z-index: 200;
+    transform: translateY(100%);
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.6);
+  }
+
+  .right-panel.mobile-open {
+    transform: translateY(0);
+  }
+
+  /* Floating Cart Bar (Bar Keranjang Melayang) */
+  .floating-cart-bar {
+    position: fixed;
+    bottom: 16px;
+    left: 16px;
+    right: 16px;
+    height: 62px;
+    background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-card) 100%);
+    border: 1px solid var(--accent-coffee);
+    border-radius: var(--border-radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    box-shadow: var(--shadow-lg);
+    z-index: 150;
+    cursor: pointer;
+    animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-left: 5px solid var(--accent-coffee);
+  }
+
+  .floating-cart-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 14px;
+  }
+
+  .floating-cart-icon {
+    font-size: 20px;
+  }
+
+  .floating-cart-qty {
+    color: var(--accent-coffee);
+  }
+
+  .floating-cart-divider {
+    color: var(--border-color);
+  }
+
+  .floating-cart-total {
+    color: var(--text-primary);
+  }
+
+  .floating-cart-btn {
+    background-color: var(--accent-coffee);
+    color: #0F0A08;
+    border: none;
+    padding: 8px 16px;
+    border-radius: var(--border-radius-sm);
+    font-weight: 800;
+    font-size: 13px;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+  .floating-cart-btn:active {
+    transform: scale(0.95);
+  }
+
+  /* Sembunyikan bar melayang jika drawer sedang terbuka */
+  body:has(.right-panel.mobile-open) .floating-cart-bar {
+    display: none !important;
+  }
+
+  /* Responsivitas Header Aplikasi (Menumpuk ke Bawah di Layar HP) */
+  .app-header {
+    padding: 12px 16px;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+    text-align: center;
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .tab-nav {
+    flex: 1;
+  }
+
+  .tab-btn {
+    flex: 1;
+    justify-content: center;
+    padding: 8px 6px;
+    font-size: 12px;
+    gap: 4px;
+  }
+
+  .role-switcher-btn {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
+  /* Katalog Menu Grid di HP (2 Kolom) */
+  .items-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .menu-card {
+    padding: 12px;
+  }
+
+  .menu-card-image {
+    width: 68px;
+    height: 68px;
+    font-size: 32px;
+    margin-bottom: 10px;
+  }
+
+  .menu-card-name {
+    font-size: 13px;
+    height: 38px;
+    margin-bottom: 4px;
+  }
+
+  .menu-card-price {
+    font-size: 12px;
+  }
+
+  /* Tata Letak Meja Grid di HP (2 Kolom) */
+  .tables-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px;
+  }
+
+  .table-card {
+    padding: 16px;
+  }
+
+  .table-number {
+    font-size: 16px;
+  }
+
+  /* Admin Dashboard & Sections di HP */
+  .admin-dashboard-cards {
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+  }
+
+  .admin-card {
+    padding: 16px;
+  }
+
+  .admin-sections-grid {
+    grid-template-columns: 1fr !important;
+    gap: 20px;
+  }
+}
+
+

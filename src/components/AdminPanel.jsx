@@ -404,6 +404,8 @@ export default function AdminPanel({
                     placeholder="25000" 
                     value={menuFormPrice}
                     onChange={(e) => setMenuFormPrice(e.target.value)}
+                    step="1000"
+                    min="0"
                     required
                   />
                 </div>

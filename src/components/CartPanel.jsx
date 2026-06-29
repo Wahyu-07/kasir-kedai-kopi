@@ -12,7 +12,9 @@ export default function CartPanel({
   selectedTable, 
   setSelectedTable, 
   checkoutTransaction,
-  saveCartToTable
+  saveCartToTable,
+  isMobileCartOpen,
+  onCloseMobileCart
 }) {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [cashAmount, setCashAmount] = useState('');
@@ -102,11 +104,21 @@ export default function CartPanel({
   };
 
   return (
-    <div className="right-panel">
+    <div className={`right-panel ${isMobileCartOpen ? 'mobile-open' : ''}`}>
       {/* Header Keranjang */}
       <div className="cart-header">
-        <h3 className="cart-title">
-          <ShoppingBag size={20} className="text-secondary" />
+        <h3 className="cart-title" style={{ display: 'flex', alignItems: 'center' }}>
+          {onCloseMobileCart && (
+            <button 
+              type="button" 
+              className="mobile-close-btn"
+              onClick={onCloseMobileCart}
+              style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', marginRight: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+            >
+              <X size={24} />
+            </button>
+          )}
+          <ShoppingBag size={20} className="text-secondary" style={{ marginRight: '6px' }} />
           Pesanan Aktif
         </h3>
         {cart.length > 0 && (

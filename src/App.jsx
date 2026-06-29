@@ -21,6 +21,7 @@ export default function App() {
   const [cart, setCart] = useState([]);
   const [orderType, setOrderType] = useState('dine-in'); // 'dine-in' | 'takeaway'
   const [selectedTable, setSelectedTable] = useState(null);
+  const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
 
   // Load awal data dari LocalStorage & cek Sesi Login
   useEffect(() => {
@@ -246,6 +247,8 @@ export default function App() {
               setSelectedTable={setSelectedTable}
               checkoutTransaction={checkoutTransaction}
               saveCartToTable={saveCartToTable}
+              isMobileCartOpen={isMobileCartOpen}
+              onCloseMobileCart={() => setIsMobileCartOpen(false)}
             />
           </>
         )}
@@ -275,6 +278,36 @@ export default function App() {
           />
         )}
       </main>
+
+      {/* Floating Cart Bar (Mobile Only) */}
+      {activeTab === 'kasir' && cart.length > 0 && (
+        <div className="floating-cart-bar" onClick={() => setIsMobileCartOpen(true)}>
+          <div className="floating-cart-info">
+            <span className="floating-cart-icon">🛒</span>
+            <span className="floating-cart-qty">
+              {cart.reduce((sum, item) => sum + item.quantity, 0)} Item
+            </span>
+            <span className="floating-cart-divider">|</span>
+            <span className="floating-cart-total">
+              {new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0
+              }).format(
+                Math.round(
+                  cart.reduce((acc, cartItem) => {
+                    const item = menuItems.find(m => m.id === cartItem.menuId);
+                    return acc + (item ? item.price * cartItem.quantity : 0);
+                  }, 0) * 1.1
+                )
+              )}
+            </span>
+          </div>
+          <button className="floating-cart-btn" type="button">
+            Lihat Struk
+          </button>
+        </div>
+      )}
     </div>
   );
 }
