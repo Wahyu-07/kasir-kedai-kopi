@@ -298,7 +298,7 @@ export default function App() {
                   cart.reduce((acc, cartItem) => {
                     const item = menuItems.find(m => m.id === cartItem.menuId);
                     return acc + (item ? item.price * cartItem.quantity : 0);
-                  }, 0) * 1.1
+                  }, 0)
                 )
               )}
             </span>

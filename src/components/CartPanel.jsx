@@ -19,6 +19,7 @@ export default function CartPanel({
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [cashAmount, setCashAmount] = useState('');
   const [receiptTx, setReceiptTx] = useState(null); // Menyimpan tx untuk struk setelah sukses bayar
+  const [paymentMethod, setPaymentMethod] = useState('tunai'); // 'tunai' | 'qris'
   
   // Hitung subtotal
   const subtotal = cart.reduce((acc, cartItem) => {
@@ -26,9 +27,9 @@ export default function CartPanel({
     return acc + (item ? item.price * cartItem.quantity : 0);
   }, 0);
 
-  // Pajak PB1 (10% makanan & minuman)
-  const tax = Math.round(subtotal * 0.1);
-  const total = subtotal + tax;
+  // Opsi A: Pajak PB1 Dihapus
+  const tax = 0;
+  const total = subtotal;
 
   // Nilai kembalian
   const parsedCash = parseFloat(cashAmount) || 0;
@@ -46,6 +47,7 @@ export default function CartPanel({
   // Reset form pembayaran
   const openPaymentModal = () => {
     setCashAmount('');
+    setPaymentMethod('tunai');
     setIsPaymentModalOpen(true);
   };
 
@@ -54,7 +56,11 @@ export default function CartPanel({
   };
 
   const handlePaymentConfirm = () => {
-    if (change < 0) return;
+    const isQris = paymentMethod === 'qris';
+    const finalCash = isQris ? total : parsedCash;
+    const finalChange = isQris ? 0 : change;
+
+    if (!isQris && finalChange < 0) return;
 
     // Susun objek transaksi
     const items = cart.map(cartItem => {
@@ -74,10 +80,11 @@ export default function CartPanel({
       tableId: orderType === 'dine-in' ? selectedTable?.id : null,
       items,
       subtotal,
-      tax,
+      tax: 0,
       total,
-      cash: parsedCash,
-      change
+      cash: finalCash,
+      change: finalChange,
+      paymentMethod
     };
 
     const savedTx = checkoutTransaction(tx);
@@ -206,14 +213,6 @@ export default function CartPanel({
       {/* Ringkasan & Tombol Bayar */}
       {cart.length > 0 && (
         <div className="cart-summary">
-          <div className="summary-row">
-            <span>Subtotal</span>
-            <span>{formatRupiah(subtotal)}</span>
-          </div>
-          <div className="summary-row">
-            <span>Pajak (PB1 10%)</span>
-            <span>{formatRupiah(tax)}</span>
-          </div>
           <div className="summary-row total">
             <span>Total Tagihan</span>
             <span>{formatRupiah(total)}</span>
@@ -264,50 +263,116 @@ export default function CartPanel({
               </button>
             </div>
             <div className="modal-body">
-              <div className="summary-row" style={{ fontSize: '16px', fontWeight: 'bold' }}>
+              {/* Selector Metode Pembayaran */}
+              <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
+                <button
+                  type="button"
+                  className={`btn ${paymentMethod === 'tunai' ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{ flex: 1, padding: '10px', fontWeight: 'bold' }}
+                  onClick={() => setPaymentMethod('tunai')}
+                >
+                  💵 Tunai (Cash)
+                </button>
+                <button
+                  type="button"
+                  className={`btn ${paymentMethod === 'qris' ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{ flex: 1, padding: '10px', fontWeight: 'bold' }}
+                  onClick={() => setPaymentMethod('qris')}
+                >
+                  📱 QRIS
+                </button>
+              </div>
+
+              <div className="summary-row" style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '16px' }}>
                 <span>Total Belanja:</span>
                 <span className="text-primary">{formatRupiah(total)}</span>
               </div>
 
-              {/* Input Uang Tunai */}
-              <div className="payment-amount-row">
-                <label>Uang Tunai Diterima</label>
-                <div className="payment-input-container">
-                  <span>Rp</span>
-                  <input 
-                    type="number" 
-                    placeholder="0"
-                    value={cashAmount}
-                    onChange={(e) => setCashAmount(e.target.value)}
-                    autoFocus
-                  />
+              {paymentMethod === 'qris' ? (
+                <div className="qris-payment-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '16px', background: '#fff', borderRadius: '12px', border: '2px dashed var(--accent-coffee)', color: '#333', marginBottom: '10px' }}>
+                  {/* QRIS Standardized header */}
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', borderBottom: '1px solid #ddd', paddingBottom: '8px', marginBottom: '12px' }}>
+                    <div style={{ display: 'flex', gap: '4px', alignItems: 'center', fontWeight: '900', fontSize: '18px', color: '#111' }}>
+                      <span style={{ color: '#E1251B' }}>Q</span>
+                      <span style={{ color: '#0054A6' }}>R</span>
+                      <span style={{ color: '#F8A11B' }}>I</span>
+                      <span style={{ color: '#00A651' }}>S</span>
+                    </div>
+                    <div style={{ fontSize: '9px', color: '#666', letterSpacing: '1px', fontWeight: 'bold' }}>BARCODE PEMBAYARAN NASIONAL</div>
+                  </div>
+                  
+                  <div style={{ fontWeight: 'bold', fontSize: '15px', marginBottom: '4px', color: '#111' }}>KOPI SANAK</div>
+                  <div style={{ fontSize: '11px', color: '#666', marginBottom: '12px' }}>NMID: ID20260629007</div>
+                  
+                  {/* Mock QR Code */}
+                  <div style={{ background: '#f5f5f5', padding: '10px', borderRadius: '8px', border: '1px solid #eee', width: '140px', height: '140px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '12px' }}>
+                    <img 
+                      src="https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=https://kopisanak-qris-payment-mock"
+                      alt="QRIS Mock" 
+                      style={{ width: '100%', height: '100%' }}
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.parentNode.innerHTML = '<div style="font-size: 50px;">📲</div>';
+                      }}
+                    />
+                  </div>
+
+                  <div style={{ fontSize: '15px', fontWeight: '800', color: 'var(--accent-coffee)', margin: '4px 0' }}>
+                    TOTAL: {formatRupiah(total)}
+                  </div>
+                  
+                  <button 
+                    type="button"
+                    className="btn btn-primary" 
+                    style={{ width: '100%', marginTop: '14px' }}
+                    onClick={handlePaymentConfirm}
+                  >
+                    Konfirmasi Bayar Sukses (QRIS)
+                  </button>
                 </div>
-              </div>
+              ) : (
+                <>
+                  {/* Input Uang Tunai */}
+                  <div className="payment-amount-row">
+                    <label>Uang Tunai Diterima</label>
+                    <div className="payment-input-container">
+                      <span>Rp</span>
+                      <input 
+                        type="number" 
+                        placeholder="0"
+                        value={cashAmount}
+                        onChange={(e) => setCashAmount(e.target.value)}
+                        autoFocus
+                      />
+                    </div>
+                  </div>
 
-              {/* Tombol Uang Cepat */}
-              <div className="payment-quick-cash">
-                <button className="quick-cash-btn" onClick={() => handleQuickCash('pas')}>Uang Pas</button>
-                <button className="quick-cash-btn" onClick={() => handleQuickCash(20000)}>20.000</button>
-                <button className="quick-cash-btn" onClick={() => handleQuickCash(50000)}>50.000</button>
-                <button className="quick-cash-btn" onClick={() => handleQuickCash(100000)}>100.000</button>
-              </div>
+                  {/* Tombol Uang Cepat */}
+                  <div className="payment-quick-cash">
+                    <button className="quick-cash-btn" onClick={() => handleQuickCash('pas')}>Uang Pas</button>
+                    <button className="quick-cash-btn" onClick={() => handleQuickCash(20000)}>20.000</button>
+                    <button className="quick-cash-btn" onClick={() => handleQuickCash(50000)}>50.000</button>
+                    <button className="quick-cash-btn" onClick={() => handleQuickCash(100000)}>100.000</button>
+                  </div>
 
-              {/* Display Kembalian */}
-              <div className={`change-display ${change >= 0 ? 'success' : 'danger'}`}>
-                <span className="change-label">Kembalian:</span>
-                <span className={`change-value ${change >= 0 ? 'success' : 'danger'}`}>
-                  {change >= 0 ? formatRupiah(change) : `Kurang ${formatRupiah(Math.abs(change))}`}
-                </span>
-              </div>
+                  {/* Display Kembalian */}
+                  <div className={`change-display ${change >= 0 ? 'success' : 'danger'}`}>
+                    <span className="change-label">Kembalian:</span>
+                    <span className={`change-value ${change >= 0 ? 'success' : 'danger'}`}>
+                      {change >= 0 ? formatRupiah(change) : `Kurang ${formatRupiah(Math.abs(change))}`}
+                    </span>
+                  </div>
 
-              <button 
-                className="btn btn-primary" 
-                style={{ width: '100%', marginTop: '10px' }}
-                disabled={change < 0}
-                onClick={handlePaymentConfirm}
-              >
-                Konfirmasi Pembayaran
-              </button>
+                  <button 
+                    className="btn btn-primary" 
+                    style={{ width: '100%', marginTop: '10px' }}
+                    disabled={change < 0}
+                    onClick={handlePaymentConfirm}
+                  >
+                    Konfirmasi Pembayaran
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -343,27 +408,27 @@ export default function CartPanel({
               </div>
 
               <div className="receipt-totals">
-                <div className="receipt-total-row">
-                  <span>Subtotal</span>
-                  <span>{formatRupiah(receiptTx.subtotal)}</span>
-                </div>
-                <div className="receipt-total-row">
-                  <span>Pajak (PB1 10%)</span>
-                  <span>{formatRupiah(receiptTx.tax)}</span>
-                </div>
                 <div className="receipt-total-row grand-total">
                   <span>TOTAL</span>
                   <span>{formatRupiah(receiptTx.total)}</span>
                 </div>
                 <div className="receipt-divider"></div>
                 <div className="receipt-total-row">
-                  <span>Uang Tunai</span>
-                  <span>{formatRupiah(receiptTx.cash)}</span>
+                  <span>Metode Bayar</span>
+                  <span style={{ fontWeight: 'bold' }}>{receiptTx.paymentMethod === 'qris' ? 'QRIS' : 'Tunai (Cash)'}</span>
                 </div>
-                <div className="receipt-total-row">
-                  <span>Kembalian</span>
-                  <span>{formatRupiah(receiptTx.change)}</span>
-                </div>
+                {receiptTx.paymentMethod !== 'qris' && (
+                  <>
+                    <div className="receipt-total-row">
+                      <span>Uang Tunai</span>
+                      <span>{formatRupiah(receiptTx.cash)}</span>
+                    </div>
+                    <div className="receipt-total-row">
+                      <span>Kembalian</span>
+                      <span>{formatRupiah(receiptTx.change)}</span>
+                    </div>
+                  </>
+                )}
               </div>
 
               <div className="receipt-footer">
