@@ -498,7 +498,7 @@ export default function AdminPanel({
                       />
                     </div>
                     {menuFormImage && (
-                      <div style={{ width: '48px', height: '48px', borderRadius: '50%', overflow: 'hidden', border: '1px solid var(--border-color)', flexShrink: 0 }}>
+                      <div style={{ width: '48px', height: '48px', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--border-color)', flexShrink: 0 }}>
                         <img 
                           src={menuFormImage} 
                           alt="Preview" 
@@ -554,7 +554,7 @@ export default function AdminPanel({
                     <tr key={item.id}>
                       <td>
                         {item.image && item.image.startsWith('data:image') ? (
-                          <div style={{ width: '40px', height: '40px', borderRadius: '50%', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
+                          <div style={{ width: '40px', height: '40px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
                             <img 
                               src={item.image} 
                               alt={item.name} 
