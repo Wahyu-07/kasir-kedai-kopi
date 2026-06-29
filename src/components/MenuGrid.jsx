@@ -105,8 +105,16 @@ export default function MenuGrid({ menuItems, addToCart }) {
                 {item.subcategory && (
                   <span className="menu-card-category">{item.subcategory}</span>
                 )}
-                <div className="menu-card-image">
-                  {item.image}
+                <div className="menu-card-image" style={item.image && item.image.startsWith('data:image') ? { overflow: 'hidden', padding: 0 } : {}}>
+                  {item.image && item.image.startsWith('data:image') ? (
+                    <img 
+                      src={item.image} 
+                      alt={item.name} 
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                    />
+                  ) : (
+                    item.image
+                  )}
                 </div>
                 <h4 className="menu-card-name">{item.name}</h4>
                 <span className="menu-card-price">{formatRupiah(item.price)}</span>

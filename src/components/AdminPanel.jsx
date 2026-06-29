@@ -28,8 +28,11 @@ export default function AdminPanel({
   // States untuk form Menu
   const [menuFormName, setMenuFormName] = useState('');
   const [menuFormPrice, setMenuFormPrice] = useState('');
-  const [menuFormCategory, setMenuFormCategory] = useState('Coffee');
+  const [menuFormCategory, setMenuFormCategory] = useState('Minuman');
+  const [menuFormSubcategory, setMenuFormSubcategory] = useState('Coffee');
+  const [imageSourceType, setImageSourceType] = useState('emoji'); // 'emoji' | 'upload'
   const [menuFormEmoji, setMenuFormEmoji] = useState('☕');
+  const [menuFormImage, setMenuFormImage] = useState(''); // Base64 string
   const [editingMenuId, setEditingMenuId] = useState(null);
 
   // States untuk form Meja
@@ -65,10 +68,54 @@ export default function AdminPanel({
     }).format(number);
   };
 
+  // --- COMPRESS IMAGE TO BASE64 (Opsi 1) ---
+  const handleImageFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 150;
+        const MAX_HEIGHT = 150;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Kompresi ke JPEG dengan kualitas 70%
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+        setMenuFormImage(compressedBase64);
+      };
+    };
+    reader.readAsDataURL(file);
+  };
+
   // --- CRUD MENU ACTIONS ---
   const handleSaveMenu = (e) => {
     e.preventDefault();
     if (!menuFormName || !menuFormPrice) return;
+
+    const finalImage = imageSourceType === 'emoji' ? menuFormEmoji : (menuFormImage || '☕');
+    const finalSubcategory = menuFormCategory === 'Minuman' ? menuFormSubcategory : null;
 
     let updatedMenu = [...menuItems];
     if (editingMenuId) {
@@ -79,7 +126,8 @@ export default function AdminPanel({
               name: menuFormName, 
               price: parseFloat(menuFormPrice), 
               category: menuFormCategory,
-              image: menuFormEmoji
+              subcategory: finalSubcategory,
+              image: finalImage
             }
           : item
       );
@@ -90,7 +138,8 @@ export default function AdminPanel({
         name: menuFormName,
         price: parseFloat(menuFormPrice),
         category: menuFormCategory,
-        image: menuFormEmoji
+        subcategory: finalSubcategory,
+        image: finalImage
       };
       updatedMenu.push(newItem);
     }
@@ -101,8 +150,11 @@ export default function AdminPanel({
     // Reset Form
     setMenuFormName('');
     setMenuFormPrice('');
-    setMenuFormCategory('Coffee');
+    setMenuFormCategory('Minuman');
+    setMenuFormSubcategory('Coffee');
+    setImageSourceType('emoji');
     setMenuFormEmoji('☕');
+    setMenuFormImage('');
   };
 
   const handleEditMenuInit = (item) => {
@@ -110,7 +162,17 @@ export default function AdminPanel({
     setMenuFormName(item.name);
     setMenuFormPrice(item.price.toString());
     setMenuFormCategory(item.category);
-    setMenuFormEmoji(item.image);
+    setMenuFormSubcategory(item.subcategory || 'Coffee');
+
+    const isUploadedImage = item.image && item.image.startsWith('data:image');
+    if (isUploadedImage) {
+      setImageSourceType('upload');
+      setMenuFormImage(item.image);
+    } else {
+      setImageSourceType('emoji');
+      setMenuFormEmoji(item.image || '☕');
+      setMenuFormImage('');
+    }
   };
 
   const handleDeleteMenu = (id) => {
@@ -345,40 +407,107 @@ export default function AdminPanel({
                     required
                   />
                 </div>
+                
                 <div className="form-group">
-                  <label>Kategori</label>
+                  <label>Kategori Utama</label>
                   <select 
                     value={menuFormCategory}
-                    onChange={(e) => setMenuFormCategory(e.target.value)}
+                    onChange={(e) => {
+                      setMenuFormCategory(e.target.value);
+                      if (e.target.value !== 'Minuman') {
+                        setMenuFormSubcategory('Coffee'); // Reset subkategori
+                      }
+                    }}
                   >
-                    <option value="Coffee">Coffee</option>
-                    <option value="Non-Coffee">Non-Coffee</option>
-                    <option value="Pastry">Pastry</option>
-                    <option value="Snack">Snack</option>
+                    <option value="Minuman">Minuman</option>
+                    <option value="Makanan">Makanan</option>
+                    <option value="Lain-lain">Lain-lain</option>
                   </select>
                 </div>
               </div>
 
+              {/* Subkategori Khusus Minuman */}
+              {menuFormCategory === 'Minuman' && (
+                <div className="form-group">
+                  <label>Subkategori Minuman</label>
+                  <select 
+                    value={menuFormSubcategory}
+                    onChange={(e) => setMenuFormSubcategory(e.target.value)}
+                  >
+                    <option value="Coffee">Coffee</option>
+                    <option value="Latte">Latte</option>
+                    <option value="Tea">Tea</option>
+                    <option value="Dll">Dll</option>
+                  </select>
+                </div>
+              )}
+
+              {/* Pilihan Sumber Gambar (Emoji atau File PNG/JPG) */}
               <div className="form-group">
-                <label>Emoji Ikon Menu (Simbol Visual)</label>
-                <select 
-                  value={menuFormEmoji}
-                  onChange={(e) => setMenuFormEmoji(e.target.value)}
-                >
-                  <option value="☕">☕ Kopi / Hot Drink</option>
-                  <option value="🥛☕">🥛☕ Latte / White Coffee</option>
-                  <option value="☁️☕">☁️☕ Cappuccino / Foam</option>
-                  <option value="🍯☕">🍯☕ Sweet Macchiato / Caramel</option>
-                  <option value="🍵">🍵 Matcha / Green Tea</option>
-                  <option value="🍫">🍫 Chocolate / Cokelat</option>
-                  <option value="🍋">🍋 Iced Lemon Tea / Buah</option>
-                  <option value="🥤">🥤 Cold Drink Bottle / Soda</option>
-                  <option value="🥐">🥐 Croissant / Pastry</option>
-                  <option value="🌀">🌀 Cinnamon Roll / Roti</option>
-                  <option value="🍟">🍟 French Fries / Kentang</option>
-                  <option value="🥪">🥪 Sandwich / Roti Panggang</option>
-                  <option value="🍰">🍰 Cake / Dessert</option>
-                </select>
+                <label>Sumber Visual Menu</label>
+                <div style={{ display: 'flex', gap: '10px', marginBottom: '8px' }}>
+                  <button
+                    type="button"
+                    className={`btn ${imageSourceType === 'emoji' ? 'btn-primary' : 'btn-secondary'}`}
+                    style={{ padding: '8px 12px', fontSize: '13px', flex: 1 }}
+                    onClick={() => setImageSourceType('emoji')}
+                  >
+                    Gunakan Emoji
+                  </button>
+                  <button
+                    type="button"
+                    className={`btn ${imageSourceType === 'upload' ? 'btn-primary' : 'btn-secondary'}`}
+                    style={{ padding: '8px 12px', fontSize: '13px', flex: 1 }}
+                    onClick={() => setImageSourceType('upload')}
+                  >
+                    Unggah Gambar
+                  </button>
+                </div>
+
+                {imageSourceType === 'emoji' ? (
+                  <div>
+                    <select 
+                      value={menuFormEmoji}
+                      onChange={(e) => setMenuFormEmoji(e.target.value)}
+                      style={{ width: '100%' }}
+                    >
+                      <option value="☕">☕ Kopi / Hot Drink</option>
+                      <option value="🥛☕">🥛☕ Latte / White Coffee</option>
+                      <option value="☁️☕">☁️☕ Cappuccino / Foam</option>
+                      <option value="🍯☕">🍯☕ Sweet Macchiato / Caramel</option>
+                      <option value="🍵">🍵 Matcha / Green Tea</option>
+                      <option value="🍫">🍫 Chocolate / Cokelat</option>
+                      <option value="🍋">🍋 Iced Lemon Tea / Buah</option>
+                      <option value="🥤">🥤 Cold Drink Bottle / Soda</option>
+                      <option value="🥐">🥐 Croissant / Pastry</option>
+                      <option value="🌀">🌀 Cinnamon Roll / Roti</option>
+                      <option value="🍟">🍟 French Fries / Kentang</option>
+                      <option value="🥪">🥪 Sandwich / Roti Panggang</option>
+                      <option value="🍰">🍰 Cake / Dessert</option>
+                      <option value="🫘">🫘 Biji Kopi / Beans</option>
+                    </select>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ flex: 1 }}>
+                      <input 
+                        type="file" 
+                        accept="image/*"
+                        onChange={handleImageFileChange}
+                        style={{ padding: '8px', width: '100%' }}
+                      />
+                    </div>
+                    {menuFormImage && (
+                      <div style={{ width: '48px', height: '48px', borderRadius: '50%', overflow: 'hidden', border: '1px solid var(--border-color)', flexShrink: 0 }}>
+                        <img 
+                          src={menuFormImage} 
+                          alt="Preview" 
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
@@ -393,8 +522,11 @@ export default function AdminPanel({
                       setEditingMenuId(null);
                       setMenuFormName('');
                       setMenuFormPrice('');
-                      setMenuFormCategory('Coffee');
+                      setMenuFormCategory('Minuman');
+                      setMenuFormSubcategory('Coffee');
+                      setImageSourceType('emoji');
                       setMenuFormEmoji('☕');
+                      setMenuFormImage('');
                     }}
                   >
                     Batal
@@ -420,10 +552,24 @@ export default function AdminPanel({
                 <tbody>
                   {menuItems.map(item => (
                     <tr key={item.id}>
-                      <td style={{ fontSize: '24px' }}>{item.image}</td>
+                      <td>
+                        {item.image && item.image.startsWith('data:image') ? (
+                          <div style={{ width: '40px', height: '40px', borderRadius: '50%', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
+                            <img 
+                              src={item.image} 
+                              alt={item.name} 
+                              style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                            />
+                          </div>
+                        ) : (
+                          <span style={{ fontSize: '24px' }}>{item.image}</span>
+                        )}
+                      </td>
                       <td>
                         <span style={{ fontWeight: 'bold' }}>{item.name}</span>
-                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{item.category}</div>
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                          {item.category} {item.subcategory ? `> ${item.subcategory}` : ''}
+                        </div>
                       </td>
                       <td style={{ fontWeight: 'bold' }}>{formatRupiah(item.price)}</td>
                       <td>
