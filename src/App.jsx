@@ -126,8 +126,7 @@ export default function App() {
       const item = menuItems.find(m => m.id === cartItem.menuId);
       return acc + (item ? item.price * cartItem.quantity : 0);
     }, 0);
-    const tax = Math.round(subtotal * 0.1);
-    const total = subtotal + tax;
+    const total = subtotal;
 
     const items = cart.map(cartItem => {
       const item = menuItems.find(m => m.id === cartItem.menuId);
@@ -143,7 +142,6 @@ export default function App() {
     const activeOrder = {
       items,
       subtotal,
-      tax,
       total,
       savedAt: new Date().toISOString()
     };
@@ -249,6 +247,8 @@ export default function App() {
               saveCartToTable={saveCartToTable}
               isMobileCartOpen={isMobileCartOpen}
               onCloseMobileCart={() => setIsMobileCartOpen(false)}
+              tables={tables}
+              loadTableOrderToCart={loadTableOrderToCart}
             />
           </>
         )}

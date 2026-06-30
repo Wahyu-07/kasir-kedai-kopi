@@ -51,7 +51,7 @@ export default function TableLayout({
   return (
     <div className="tables-view">
       <div className="tables-header">
-        <h2>Tata Letak Meja Kopi</h2>
+        <h2>Daftar Meja</h2>
         <p>Kelola pesanan Dine-In (Makan di tempat). Klik meja kosong untuk membuat pesanan baru, atau meja terisi untuk mengedit/membayar.</p>
       </div>
 
@@ -107,7 +107,7 @@ export default function TableLayout({
                       </div>
                     ))}
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px', fontWeight: 'bold', borderTop: '1px solid var(--border-color)', paddingTop: '10px', marginTop: '10px' }}>
-                      <span>Total Tagihan (+Pajak 10%)</span>
+                      <span>Total Tagihan</span>
                       <span style={{ color: 'var(--accent-coffee)' }}>
                         {formatRupiah(activeTableDetail.activeOrder.total)}
                       </span>

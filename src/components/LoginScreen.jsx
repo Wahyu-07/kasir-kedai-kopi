@@ -56,9 +56,9 @@ export default function LoginScreen({ onLogin }) {
         {/* Sisi Kiri: Branding Coffee Shop */}
         <div className="login-left">
           <div className="login-logo">☕</div>
-          <h2 className="login-tagline">Kopi Sanak</h2>
+          <h2 className="login-tagline">Kedai Kopi Q'Yat</h2>
           <p className="login-desc">
-            Sistem Kasir Offline-First Kedai Kopi Sanak. Real-Time, Cepat, dan Handal.
+            Sistem Kasir Offline-First Kedai Kopi Q'Yat. Real-Time, Cepat, dan Handal.
           </p>
         </div>
 

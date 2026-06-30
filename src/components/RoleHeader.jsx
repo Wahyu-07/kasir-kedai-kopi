@@ -11,7 +11,7 @@ export default function RoleHeader({ loggedInUser, onLogout, activeTab, setActiv
       <div className="brand-section">
         <span className="brand-logo">☕</span>
         <div>
-          <h1 className="brand-name" style={{ fontSize: '18px' }}>Kopi Sanak</h1>
+          <h1 className="brand-name" style={{ fontSize: '18px' }}>Kedai Kopi Q'Yat</h1>
         </div>
       </div>
 
@@ -32,7 +32,7 @@ export default function RoleHeader({ loggedInUser, onLogout, activeTab, setActiv
             onClick={() => setActiveTab('meja')}
           >
             <Grid size={16} />
-            Meja
+            Nota Meja
           </button>
           
           {loggedInUser?.role === 'admin' && (

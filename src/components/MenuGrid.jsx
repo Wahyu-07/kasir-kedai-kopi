@@ -7,7 +7,7 @@ export default function MenuGrid({ menuItems, addToCart }) {
   const [selectedSubCategory, setSelectedSubCategory] = useState('All');
 
   const mainCategories = ['Minuman', 'Makanan', 'Lain-lain'];
-  const beverageSubcategories = ['All', 'Coffee', 'Latte', 'Tea', 'Dll'];
+  const beverageSubcategories = ['All', 'Coffee', 'Tea', 'Lainnya'];
 
   // Melakukan filtering bertingkat berdasarkan kategori utama, subkategori, dan pencarian
   const filteredItems = useMemo(() => {
@@ -46,13 +46,13 @@ export default function MenuGrid({ menuItems, addToCart }) {
     <div className="left-panel">
       {/* Search & Filter Kategori */}
       <div className="search-filter-section">
-        
+
         {/* Input Pencarian */}
         <div className="search-bar">
           <Search size={20} className="text-muted" />
-          <input 
-            type="text" 
-            placeholder={`Cari di kategori ${selectedMainCategory.toLowerCase()}...`} 
+          <input
+            type="text"
+            placeholder={`Cari di kategori ${selectedMainCategory.toLowerCase()}...`}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -97,8 +97,8 @@ export default function MenuGrid({ menuItems, addToCart }) {
         ) : (
           <div className="items-grid">
             {filteredItems.map(item => (
-              <div 
-                key={item.id} 
+              <div
+                key={item.id}
                 className="menu-card"
                 onClick={() => addToCart(item)}
               >
@@ -107,10 +107,10 @@ export default function MenuGrid({ menuItems, addToCart }) {
                 )}
                 <div className="menu-card-image" style={item.image && item.image.startsWith('data:image') ? { overflow: 'hidden', padding: 0 } : {}}>
                   {item.image && item.image.startsWith('data:image') ? (
-                    <img 
-                      src={item.image} 
-                      alt={item.name} 
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                     />
                   ) : (
                     item.image

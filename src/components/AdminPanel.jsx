@@ -227,7 +227,7 @@ export default function AdminPanel({
     const dataStr = "data:text/plain;charset=utf-8," + encodeURIComponent(backupJson);
     const downloadAnchor = document.createElement('a');
     downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", `Kopi_Sanak_Backup_${new Date().toISOString().slice(0, 10)}.txt`);
+    downloadAnchor.setAttribute("download", `Kedai_Kopi_Q'Yat_Backup_${new Date().toISOString().slice(0, 10)}.txt`);
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();

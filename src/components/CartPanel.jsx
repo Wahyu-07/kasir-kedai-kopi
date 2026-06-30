@@ -1,39 +1,62 @@
 import React, { useState, useEffect } from 'react';
 import { ShoppingBag, Plus, Minus, Trash2, Printer, X, CreditCard } from 'lucide-react';
 
-export default function CartPanel({ 
-  cart, 
-  updateCartQty, 
-  updateCartNote, 
-  clearCart, 
-  menuItems, 
-  orderType, 
-  setOrderType, 
-  selectedTable, 
-  setSelectedTable, 
+export default function CartPanel({
+  cart,
+  updateCartQty,
+  updateCartNote,
+  clearCart,
+  menuItems,
+  orderType,
+  setOrderType,
+  selectedTable,
+  setSelectedTable,
   checkoutTransaction,
   saveCartToTable,
   isMobileCartOpen,
-  onCloseMobileCart
+  onCloseMobileCart,
+  tables = [],
+  loadTableOrderToCart
 }) {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [cashAmount, setCashAmount] = useState('');
   const [receiptTx, setReceiptTx] = useState(null); // Menyimpan tx untuk struk setelah sukses bayar
   const [paymentMethod, setPaymentMethod] = useState('tunai'); // 'tunai' | 'qris'
-  
+
   // Hitung subtotal
   const subtotal = cart.reduce((acc, cartItem) => {
     const item = menuItems.find(m => m.id === cartItem.menuId);
     return acc + (item ? item.price * cartItem.quantity : 0);
   }, 0);
 
-  // Opsi A: Pajak PB1 Dihapus
-  const tax = 0;
   const total = subtotal;
 
   // Nilai kembalian
   const parsedCash = parseFloat(cashAmount) || 0;
   const change = parsedCash - total;
+
+  const handleTableChange = (e) => {
+    const tableId = e.target.value;
+    if (!tableId) {
+      setSelectedTable(null);
+      return;
+    }
+
+    const tbl = tables.find(t => t.id === tableId);
+    if (!tbl) return;
+
+    if (tbl.status === 'occupied') {
+      const confirmLoad = window.confirm(
+        `Meja ${tbl.number.replace('Meja ', '')} sedang terisi pesanan.\n\nApakah Anda ingin membuka pesanan meja ini ke keranjang?\n(Perhatian: Ini akan menggantikan isi keranjang Anda saat ini)`
+      );
+      if (confirmLoad) {
+        loadTableOrderToCart(tbl);
+        setSelectedTable(tbl);
+      }
+    } else {
+      setSelectedTable(tbl);
+    }
+  };
 
   // Cepat isi uang cash
   const handleQuickCash = (amount) => {
@@ -80,7 +103,6 @@ export default function CartPanel({
       tableId: orderType === 'dine-in' ? selectedTable?.id : null,
       items,
       subtotal,
-      tax: 0,
       total,
       cash: finalCash,
       change: finalChange,
@@ -116,8 +138,8 @@ export default function CartPanel({
       <div className="cart-header">
         <h3 className="cart-title" style={{ display: 'flex', alignItems: 'center' }}>
           {onCloseMobileCart && (
-            <button 
-              type="button" 
+            <button
+              type="button"
               className="mobile-close-btn"
               onClick={onCloseMobileCart}
               style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', marginRight: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
@@ -137,13 +159,13 @@ export default function CartPanel({
 
       {/* Toggle Dine-in vs Takeaway */}
       <div className="order-type-tabs">
-        <button 
+        <button
           className={`order-type-btn ${orderType === 'dine-in' ? 'active' : ''}`}
           onClick={() => setOrderType('dine-in')}
         >
           Dine-In (Di Tempat)
         </button>
-        <button 
+        <button
           className={`order-type-btn ${orderType === 'takeaway' ? 'active' : ''}`}
           onClick={() => {
             setOrderType('takeaway');
@@ -156,13 +178,32 @@ export default function CartPanel({
 
       {/* Info Meja (Jika Dine-In) */}
       {orderType === 'dine-in' && (
-        <div className="table-selection-row">
-          <span>Meja Layanan</span>
-          {selectedTable ? (
-            <span className="table-badge">{selectedTable.number}</span>
-          ) : (
-            <span className="table-badge none">Pilih Meja di Tab Meja</span>
-          )}
+        <div className="table-selection-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px' }}>
+          <span style={{ fontWeight: '600', fontSize: '14px', color: 'var(--text-secondary)' }}>Meja Layanan</span>
+          <select
+            value={selectedTable?.id || ""}
+            onChange={handleTableChange}
+            style={{
+              backgroundColor: 'var(--bg-primary)',
+              color: 'var(--text-primary)',
+              border: '1px solid var(--border-color)',
+              borderRadius: '8px',
+              padding: '6px 12px',
+              fontFamily: 'var(--font-family)',
+              fontSize: '14px',
+              fontWeight: 'bold',
+              outline: 'none',
+              cursor: 'pointer',
+              maxWidth: '180px'
+            }}
+          >
+            <option value=""> Pilih Meja </option>
+            {tables.map(t => (
+              <option key={t.id} value={t.id}>
+                {t.number} {t.status === 'occupied' ? '(Terisi)' : '(Kosong)'}
+              </option>
+            ))}
+          </select>
         </div>
       )}
 
@@ -194,12 +235,12 @@ export default function CartPanel({
                     </button>
                   </div>
                 </div>
-                
+
                 {/* Catatan / Custom Modifier */}
                 <div className="cart-item-note-row">
-                  <input 
-                    type="text" 
-                    placeholder="Tambah catatan (Ice, Less Sugar, Extra Shot...)" 
+                  <input
+                    type="text"
+                    placeholder="Tambah catatan (Ice, Less Sugar, Extra Shot...)"
                     value={cartItem.notes || ''}
                     onChange={(e) => updateCartNote(cartItem.menuId, e.target.value)}
                   />
@@ -219,17 +260,17 @@ export default function CartPanel({
           </div>
           {orderType === 'dine-in' && selectedTable ? (
             <div style={{ display: 'flex', gap: '10px' }}>
-              <button 
+              <button
                 type="button"
-                className="btn btn-secondary" 
+                className="btn btn-secondary"
                 style={{ flex: 1, borderColor: 'var(--color-warning)', color: 'var(--color-warning)' }}
                 onClick={() => saveCartToTable()}
               >
-                Simpan ke Meja
+                Simpan Nota
               </button>
-              <button 
+              <button
                 type="button"
-                className="btn btn-primary" 
+                className="btn btn-primary"
                 style={{ flex: 1 }}
                 onClick={openPaymentModal}
               >
@@ -237,14 +278,14 @@ export default function CartPanel({
               </button>
             </div>
           ) : (
-            <button 
-              className="btn btn-primary checkout-btn" 
+            <button
+              className="btn btn-primary checkout-btn"
               onClick={openPaymentModal}
               disabled={orderType === 'dine-in' && !selectedTable}
             >
               <CreditCard size={18} />
-              {orderType === 'dine-in' && !selectedTable 
-                ? 'Pilih Nomor Meja Dahulu' 
+              {orderType === 'dine-in' && !selectedTable
+                ? 'Pilih Nomor Meja Dahulu'
                 : 'Bayar Sekarang'
               }
             </button>
@@ -300,15 +341,15 @@ export default function CartPanel({
                     </div>
                     <div style={{ fontSize: '9px', color: '#666', letterSpacing: '1px', fontWeight: 'bold' }}>BARCODE PEMBAYARAN NASIONAL</div>
                   </div>
-                  
-                  <div style={{ fontWeight: 'bold', fontSize: '15px', marginBottom: '4px', color: '#111' }}>KOPI SANAK</div>
+
+                  <div style={{ fontWeight: 'bold', fontSize: '15px', marginBottom: '4px', color: '#111' }}>KEDAI KOPI Q'YAT</div>
                   <div style={{ fontSize: '11px', color: '#666', marginBottom: '12px' }}>NMID: ID20260629007</div>
-                  
+
                   {/* Mock QR Code */}
                   <div style={{ background: '#f5f5f5', padding: '10px', borderRadius: '8px', border: '1px solid #eee', width: '140px', height: '140px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '12px' }}>
-                    <img 
-                      src="https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=https://kopisanak-qris-payment-mock"
-                      alt="QRIS Mock" 
+                    <img
+                      src="https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=https://kedai-kopi-qyat-qris-payment-mock"
+                      alt="QRIS Mock"
                       style={{ width: '100%', height: '100%' }}
                       onError={(e) => {
                         e.target.style.display = 'none';
@@ -320,10 +361,10 @@ export default function CartPanel({
                   <div style={{ fontSize: '15px', fontWeight: '800', color: 'var(--accent-coffee)', margin: '4px 0' }}>
                     TOTAL: {formatRupiah(total)}
                   </div>
-                  
-                  <button 
+
+                  <button
                     type="button"
-                    className="btn btn-primary" 
+                    className="btn btn-primary"
                     style={{ width: '100%', marginTop: '14px' }}
                     onClick={handlePaymentConfirm}
                   >
@@ -337,8 +378,8 @@ export default function CartPanel({
                     <label>Uang Tunai Diterima</label>
                     <div className="payment-input-container">
                       <span>Rp</span>
-                      <input 
-                        type="number" 
+                      <input
+                        type="number"
                         placeholder="0"
                         value={cashAmount}
                         onChange={(e) => setCashAmount(e.target.value)}
@@ -363,8 +404,8 @@ export default function CartPanel({
                     </span>
                   </div>
 
-                  <button 
-                    className="btn btn-primary" 
+                  <button
+                    className="btn btn-primary"
                     style={{ width: '100%', marginTop: '10px' }}
                     disabled={change < 0}
                     onClick={handlePaymentConfirm}
@@ -384,13 +425,13 @@ export default function CartPanel({
           <div className="modal-content" style={{ maxWidth: '380px', backgroundColor: '#e5e5e5', padding: '16px' }}>
             <div className="receipt-container">
               <div className="receipt-header">
-                <span className="receipt-shop-name">Kopi Sanak</span>
+                <span className="receipt-shop-name">Kedai Kopi Q'Yat</span>
                 <div className="receipt-shop-sub">Jl. Raya Kopi Sejahtera, No. 88</div>
                 <div className="receipt-meta">
                   <div>No: {receiptTx.id}</div>
                   <div>Tgl: {new Date(receiptTx.timestamp).toLocaleString('id-ID')}</div>
                   <div>Tipe: {receiptTx.orderType.toUpperCase()} {receiptTx.orderType === 'dine-in' ? `(${receiptTx.tableNumber})` : ''}</div>
-                  <div>Kasir: Staff Kopi Sanak</div>
+                  <div>Kasir: Staff Kedai Kopi Q'Yat</div>
                 </div>
               </div>
 
@@ -433,7 +474,7 @@ export default function CartPanel({
 
               <div className="receipt-footer">
                 <div>TERIMA KASIH</div>
-                <div>Lapo Sanak, Ditunggu Datang Kembali!</div>
+                <div>Kedai Kopi Q'Yat, Ditunggu Datang Kembali!</div>
               </div>
             </div>
 
